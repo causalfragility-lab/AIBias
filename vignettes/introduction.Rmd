@@ -1,0 +1,254 @@
+---
+title: "Introduction to AIBias: Longitudinal Bias Auditing"
+output: rmarkdown::html_vignette
+vignette: >
+  %\VignetteIndexEntry{Introduction to AIBias: Longitudinal Bias Auditing}
+  %\VignetteEngine{knitr::rmarkdown}
+  %\VignetteEncoding{UTF-8}
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(
+  collapse  = TRUE,
+  comment   = "#>",
+  fig.width = 7,
+  fig.height = 4.5,
+  warning   = FALSE,
+  message   = FALSE
+)
+library(AIBias)
+```
+
+## Overview
+
+Standard fairness audits treat bias as a **snapshot** — a single-point
+disparity measurement at one moment in time. But in sequential decision
+systems (loan approvals, parole reviews, hiring pipelines, credit scoring),
+decisions at time $t$ feed back into the features available at time $t+1$.
+
+**AIBias** treats algorithmic bias as a longitudinal process. It tracks:
+
+- How group disparities **evolve** over repeated decisions
+- Where disparities **compound** via transition dynamics
+- Whether earlier decisions **amplify** later inequality
+
+---
+
+## The Synthetic Lending Dataset
+
+The package ships with `lending_panel`, a 600-applicant × 6-year panel of
+synthetic loan decisions across three racial groups.
+
+```{r data-overview}
+data(lending_panel)
+head(lending_panel)
+```
+
+```{r approval-rates}
+# Pooled approval rates by group
+tapply(lending_panel$approved, lending_panel$race, mean) |> round(3)
+```
+
+Even from this simple tabulation we see a gap. But it misses the *dynamic*
+story: are disadvantaged groups less able to recover from a denial? Are gaps
+widening over time?
+
+---
+
+## Step 1 — Build the Audit Object
+
+```{r build}
+obj <- aib_build(
+  data     = lending_panel,
+  id       = "applicant_id",
+  time     = "year",
+  group    = "race",
+  decision = "approved"
+)
+print(obj)
+```
+
+---
+
+## Step 2 — Describe Bias Trajectories
+
+`aib_describe()` computes:
+
+- $\hat{\pi}_g(t)$: group-specific decision rate at each wave
+- $\hat{B}_{g,r}(t) = \hat{\pi}_g(t) - \hat{\pi}_r(t)$: raw bias trajectory
+- $\hat{B}^*_{g,r}(t)$: standardized (SMD) trajectory
+- $CB_{g,r}(T)$: cumulative bias burden
+
+```{r describe}
+obj <- aib_describe(obj, ref_group = "White")
+obj$bias$cumulative
+```
+
+The cumulative burden (`CB_normalized`) summarizes the average disparity
+experienced across all waves — a single policy-facing number.
+
+### Trajectory Plot
+
+```{r plot-trajectory, fig.alt="Bias trajectory plot"}
+plot(obj, type = "trajectory")
+```
+
+Both groups show a persistent negative disparity from wave 1. The gap is
+relatively stable, suggesting a **persistent** rather than purely growing
+pattern — but the dynamic analysis below reveals compounding beneath the
+surface.
+
+### Heatmap — Disparity Surface
+
+```{r plot-heatmap, fig.alt="Group-time disparity heatmap"}
+plot(obj, type = "heatmap")
+```
+
+The heatmap displays the full group × time disparity surface. Red cells
+indicate disadvantaged periods.
+
+---
+
+## Step 3 — Transition Analysis
+
+The key question for **compounding bias**: are disadvantaged groups less
+likely to *recover* after a denial, and less likely to *retain* approval?
+
+```{r transition}
+obj <- aib_transition(obj, ref_group = "White")
+
+# Recovery and retention gaps
+obj$transitions$recovery_gap
+obj$transitions$retention_gap
+```
+
+```{r plot-transition, fig.alt="Transition probabilities plot"}
+plot(obj, type = "transition")
+```
+
+The transition plot reveals the mechanism of compounding. Despite some
+overall disparity in approval rates, the **recovery gap** is the most
+consequential finding: after a denial, Black applicants recover at a much
+lower rate than White applicants, locking them into unfavorable states.
+
+### Markov State Evolution
+
+The Markov amplification operator $A^{state}_{g,r}(T) = \sum_t \|v_g(t) - v_r(t)\|$
+quantifies cumulative divergence in state distributions:
+
+```{r amp-state}
+obj$transitions$amp_state
+```
+
+---
+
+## Step 4 — Amplification Analysis
+
+The amplification index measures:
+
+$$A_{g,r}(t) = B_{g,r}(t \mid 1) - B_{g,r}(t \mid 0)$$
+
+If $A_{g,r}(t) \neq 0$, prior decision state is **modifying** the group
+disparity — the hallmark of dynamic rather than static bias.
+
+```{r amplify}
+obj <- aib_amplify(obj, ref_group = "White")
+obj$amplification$cumulative
+```
+
+```{r plot-amplification, fig.alt="Amplification index plot"}
+plot(obj, type = "amplification")
+```
+
+### Narrative Interpretation
+
+```{r narratives}
+obj$amplification$narratives
+```
+
+---
+
+## Step 5 — Covariate Adjustment
+
+To separate "case mix" differences from residual disparity, fit a
+covariate-adjusted model:
+
+```{r adjust, eval=FALSE}
+obj <- aib_adjust(
+  obj,
+  formula   = ~ income + credit_score,
+  method    = "glm",
+  ref_group = "White"
+)
+
+# Adjusted trajectory
+head(obj$adjusted$trajectory)
+```
+
+---
+
+## Step 6 — Bootstrap Confidence Intervals
+
+```{r bootstrap, eval=FALSE}
+obj <- aib_bootstrap(obj, B = 500, seed = 2024, conf = 0.95)
+plot(obj, type = "trajectory")  # Now includes ribbon CIs
+```
+
+---
+
+## One-Shot: `aib_audit()`
+
+Run the full pipeline in one call:
+
+```{r audit, eval=FALSE}
+result <- aib_audit(
+  lending_panel,
+  id        = "applicant_id",
+  time      = "year",
+  group     = "race",
+  decision  = "approved",
+  ref_group = "White",
+  bootstrap = TRUE,
+  B         = 200,
+  seed      = 42
+)
+
+summary(result)
+```
+
+---
+
+## Formal Definition of Bias Amplification
+
+A decision system exhibits **bias amplification** for group $g$ relative to
+reference group $r$ over times $1, \ldots, T$ if:
+
+1. $|B_{g,r}(t)| > |B_{g,r}(s)|$ for some $t > s$ (disparity grows), **and**
+
+2. Either $A_{g,r}(t) = B_{g,r}(t \mid 1) - B_{g,r}(t \mid 0) \neq 0$
+   (prior decisions modulate current disparity), **or**
+
+3. $P_g(t) \neq P_r(t)$ (group transition matrices are unequal).
+
+**Proposition:** If $p_g^{11}(t) < p_r^{11}(t)$ and $p_g^{01}(t) < p_r^{01}(t)$
+for all $t$, then under common initial conditions the favorable-decision
+probability for group $g$ weakly decreases relative to group $r$ over time,
+implying nonnegative cumulative disparity against group $g$.
+
+This distinguishes *static persistent bias* (constant gap) from
+*dynamic compounding bias* (self-reinforcing gap driven by the decision
+process itself).
+
+---
+
+## Summary of Core Estimands
+
+| Estimand | Function | Formula |
+|---|---|---|
+| Bias trajectory | `aib_describe()` | $B_{g,r}(t)$ |
+| Standardized trajectory | `aib_describe()` | $B^*_{g,r}(t)$ |
+| Cumulative burden | `aib_describe()` | $CB_{g,r}(T)$ |
+| Recovery gap | `aib_transition()` | $\Delta^{01}_{g,r}$ |
+| Retention gap | `aib_transition()` | $\Delta^{11}_{g,r}$ |
+| Amplification index | `aib_amplify()` | $A_{g,r}(t)$ |
+| Bias persistence | `aib_persistence()` | $PB_{g,r}(c)$ |
