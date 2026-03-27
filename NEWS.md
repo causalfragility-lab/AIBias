@@ -1,4 +1,4 @@
-# AIBias 0.1.0
+ # AIBias 0.1.0
 
 * Initial CRAN submission.
 
@@ -13,3 +13,11 @@
 
 * Demo script reproducing all four paper figures:
   `demo("paper_figures", package = "AIBias")`.
+
+## Resubmission notes
+
+* Removed author surnames from DESCRIPTION to avoid spell check false
+  positives (Barocas, Hardt, Narayanan, Gelbach replaced with neutral
+  citation wording).
+
+* Added `.gitignore` to exclude `cran-comments.md` from the repository.
