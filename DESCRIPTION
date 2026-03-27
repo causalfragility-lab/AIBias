@@ -12,19 +12,18 @@ Description: Provides tools for detecting, quantifying, and visualizing
     package operationalizes the view that bias in sequential systems must be
     measured over time. Implements group-specific decision-rate trajectories,
     standardized disparity measures analogous to the standardized mean
-    difference of Cohen (1988, ISBN:0-8058-0283-5), cumulative bias burden,
+    difference (Cohen, 1988, ISBN:0-8058-0283-5), cumulative bias burden,
     Markov-based transition disparity (recovery and retention gaps), and a
     dynamic amplification index that quantifies whether prior decisions
     compound current group inequality. The amplification framework extends
-    longitudinal causal inference ideas discussed in Robins (1986)
+    longitudinal causal inference ideas from Robins (1986)
     <doi:10.1016/0270-0255(86)90088-6> and the sequential decision-process
-    perspective of Barocas, Hardt, and Narayanan (2023,
-    <https://fairmlbook.org>) to the audit setting. Covariate-adjusted
-    trajectories are estimated via logistic regression, generalized additive
-    models (Wood, 2017, <doi:10.1201/9781315370279>), or generalized linear
-    mixed models (Bates et al., 2015, <doi:10.18637/jss.v067.i01>).
-    Uncertainty quantification uses the cluster bootstrap of Cameron,
-    Gelbach, and Miller (2008, <doi:10.1162/rest.90.3.414>).
+    perspective in the fairness literature (see <https://fairmlbook.org>)
+    to the audit setting. Covariate-adjusted trajectories are estimated via
+    logistic regression, generalized additive models (Wood, 2017,
+    <doi:10.1201/9781315370279>), or generalized linear mixed models
+    (Bates, 2015, <doi:10.18637/jss.v067.i01>). Uncertainty quantification
+    uses the cluster bootstrap (Cameron, 2008, <doi:10.1162/rest.90.3.414>).
 License: MIT + file LICENSE
 Encoding: UTF-8
 Language: en-US
@@ -51,4 +50,3 @@ LazyData: true
 Depends: R (>= 4.1.0)
 URL: https://github.com/causalfragility-lab/AIBias
 BugReports: https://github.com/causalfragility-lab/AIBias/issues
-
