@@ -1,0 +1,16 @@
+ # R build artifacts
+*.Rcheck/
+*.tar.gz
+*.zip
+
+# RStudio
+.Rproj.user/
+.Rhistory
+.RData
+
+# Built vignettes
+vignettes/*.html
+vignettes/*.R
+
+# CRAN submission files (not part of package)
+cran-comments.md

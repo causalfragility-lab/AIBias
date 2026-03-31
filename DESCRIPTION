@@ -6,42 +6,42 @@ Authors@R:
            email   = "haitsubi@msu.edu",
            role    = c("aut", "cre"),
            comment = c(ORCID = "0009-0004-9871-9677"))
-Description: Tools for detecting, quantifying, and visualizing algorithmic
-    bias as a longitudinal process in repeated decision systems. Unlike
-    existing fairness metrics that treat bias as a single-period snapshot,
-    this package operationalizes the view that bias in sequential systems
-    must be measured over time. Implements group-specific decision-rate
-    trajectories, standardized disparity measures analogous to the
-    standardized mean difference of Cohen (1988, ISBN:0-8058-0283-5),
-    cumulative bias burden, Markov-based transition disparity (recovery and
-    retention gaps), and a dynamic amplification index that quantifies
-    whether prior decisions compound current group inequality. The
-    amplification framework extends longitudinal causal inference ideas of
-    Robins (1986) <doi:10.1016/0270-0255(86)90088-6> and the sequential
-    decision-process perspective of Barocas, Hardt, and Narayanan (2023)
-    <https://fairmlbook.org> to the audit setting. Covariate-adjusted
-    trajectories are estimated via logistic regression, generalized additive
-    models (Wood, 2017) <doi:10.1201/9781315370279>, or generalized linear
-    mixed models (Bates et al., 2015) <doi:10.18637/jss.v067.i01>.
-    Uncertainty quantification uses the cluster bootstrap of Cameron,
-    Gelbach, and Miller (2008) <doi:10.1162/rest.90.3.414>.
+Description: Provides tools for detecting, quantifying, and visualizing
+    algorithmic bias as a longitudinal process in repeated decision systems.
+    Existing fairness metrics treat bias as a single-period snapshot; this
+    package operationalizes the view that bias in sequential systems must be
+    measured over time. Implements group-specific decision-rate trajectories,
+    standardized disparity measures analogous to the standardized mean
+    difference (Cohen, 1988, ISBN:0-8058-0283-5), cumulative bias burden,
+    Markov-based transition disparity (recovery and retention gaps), and a
+    dynamic amplification index that quantifies whether prior decisions
+    compound current group inequality. The amplification framework extends
+    longitudinal causal inference ideas from Robins (1986)
+    <doi:10.1016/0270-0255(86)90088-6> and the sequential decision-process
+    perspective in the fairness literature (see <https://fairmlbook.org>)
+    to the audit setting. Covariate-adjusted trajectories are estimated via
+    logistic regression, generalized additive models (Wood, 2017,
+    <doi:10.1201/9781315370279>), or generalized linear mixed models
+    (Bates, 2015, <doi:10.18637/jss.v067.i01>). Uncertainty quantification
+    uses the cluster bootstrap (Cameron, 2008, <doi:10.1162/rest.90.3.414>).
 License: MIT + file LICENSE
 Encoding: UTF-8
+Language: en-US
 Roxygen: list(markdown = TRUE)
 RoxygenNote: 7.3.3
 Imports:
-    cli (>= 3.6.0),
     dplyr (>= 1.1.0),
+    tidyr (>= 1.3.0),
     ggplot2 (>= 3.4.0),
-    purrr (>= 1.0.0),
     rlang (>= 1.1.0),
-    tibble (>= 3.2.0),
-    tidyr (>= 1.3.0)
+    cli (>= 3.6.0),
+    purrr (>= 1.0.0),
+    tibble (>= 3.2.0)
 Suggests:
+    mgcv,
+    lme4,
     boot,
     knitr,
-    lme4,
-    mgcv,
     rmarkdown,
     testthat (>= 3.0.0)
 Config/testthat/edition: 3
