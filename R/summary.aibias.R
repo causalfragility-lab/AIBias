@@ -2,6 +2,7 @@
 #'
 #' @param x An `aibias` object.
 #' @param ... Ignored.
+#' @return Invisibly returns \code{x}, called for its side effect of printing a concise summary of the audit object to the console.
 #' @export
 print.aibias <- function(x, ...) {
   cat("\n")
@@ -31,6 +32,7 @@ print.aibias <- function(x, ...) {
 #'
 #' @param object An `aibias` object.
 #' @param ... Ignored.
+#' @return Invisibly returns \code{object}, called for its side effect of printing a comprehensive audit summary to the console.
 #' @export
 summary.aibias <- function(object, ...) {
   cat("\n")

@@ -19,7 +19,7 @@
 #' time observations are retained.
 #'
 #' @examples
-#' \dontrun{
+#' \donttest{
 #' data(lending_panel)
 #' obj <- aib_build(lending_panel, "applicant_id", "year", "race", "approved")
 #' obj <- aib_describe(obj, ref_group = "White")

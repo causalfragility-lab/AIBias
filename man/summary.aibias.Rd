@@ -11,6 +11,9 @@
 
 \item{...}{Ignored.}
 }
+\value{
+Invisibly returns \code{object}, called for its side effect of printing a comprehensive audit summary to the console.
+}
 \description{
 Produces a comprehensive audit summary including trajectory statistics,
 transition gaps, amplification indices, and narrative interpretation.

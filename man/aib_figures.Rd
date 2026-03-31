@@ -4,13 +4,13 @@
 \alias{aib_figures}
 \title{Copy and run the paper figures script}
 \usage{
-aib_figures(run = TRUE, dest = "paper_figures.R")
+aib_figures(run = TRUE, dest = file.path(tempdir(), "paper_figures.R"))
 }
 \arguments{
 \item{run}{Logical. If TRUE (default), runs the script immediately.
 If FALSE, just copies the file for you to inspect and edit first.}
 
-\item{dest}{Character. Destination filename. Default \code{"paper_figures.R"}.}
+\item{dest}{Character. Destination filename. Default \code{file.path(tempdir(), "paper_figures.R")}.}
 }
 \value{
 The path to the copied script, invisibly.
@@ -22,12 +22,12 @@ bias trajectory, transition asymmetry, amplification index, and cumulative
 burden from a toy simulation (N=20, T=3).
 }
 \examples{
-\dontrun{
+\donttest{
 # Copy and run immediately
 aib_figures()
 
 # Just copy to inspect first
-aib_figures(run = FALSE)
+aib_figures(run = FALSE, dest = file.path(tempdir(), "paper_figures.R"))
 }
 
 }

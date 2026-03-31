@@ -7,3 +7,4 @@
 ^codecov\.yml$
 ^CONTRIBUTING\.md$
 ^CRAN-SUBMISSION$
+^cran-comments\.md$

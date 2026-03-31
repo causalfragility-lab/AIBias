@@ -11,6 +11,9 @@
 
 \item{...}{Ignored.}
 }
+\value{
+Invisibly returns \code{x}, called for its side effect of printing a concise summary of the audit object to the console.
+}
 \description{
 Print an aibias object
 }
