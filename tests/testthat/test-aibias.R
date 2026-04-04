@@ -300,3 +300,15 @@ test_that("aib_panel_info returns correct unit counts", {
   pi  <- aib_panel_info(obj)
   expect_equal(sum(pi$n_units), 120)
 })
+
+test_that("amplification sign matches mechanism convention", {
+  obj <- aib_build(lending_panel, id = "applicant_id",
+                   time = "year", group = "race", decision = "approved")
+  obj <- aib_transition(obj, ref_group = "White")
+  obj <- aib_amplify(obj, ref_group = "White", sign = "mechanism", verbose = FALSE)
+  # mechanism sign: negative = recovery-driven, positive = retention-driven
+  expect_true(is.numeric(obj$amplification$cumulative$A_cumulative))
+  expect_true("sign" %in% names(obj$amplification))
+  expect_equal(obj$amplification$sign, "mechanism")
+})
+

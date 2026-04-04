@@ -1,6 +1,6 @@
 Package: AIBias
 Title: Longitudinal Bias Auditing for Sequential Decision Systems
-Version: 0.1.0
+Version: 0.1.1
 Authors@R:
     person("Subir", "Hait",
            email   = "haitsubi@msu.edu",

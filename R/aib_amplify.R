@@ -9,6 +9,12 @@
 #' @param object An `aibias` object from [AIBias::aib_build()]. Recommended to run
 #'   [AIBias::aib_transition()] first.
 #' @param ref_group Character. Reference group.
+#' @param sign Character; \code{"mechanism"} (default) or \code{"legacy"}.
+#'   Under \code{"mechanism"}: negative values indicate recovery-driven
+#'   amplification against the focal group; positive values indicate
+#'   retention-driven amplification. Under \code{"legacy"}: positive values
+#'   indicate compounding against the focal group. Note: prior versions used
+#'   the \code{"legacy"} sign convention.
 #' @param verbose Logical.
 #'
 #' @return The `aibias` object with `$amplification` populated. Contains:
@@ -33,8 +39,10 @@
 #' @export
 aib_amplify <- function(object,
                         ref_group = NULL,
+                        sign      = c("mechanism", "legacy"),
                         verbose   = TRUE) {
   .check_aibias(object)
+  sign <- match.arg(sign)
 
   ref_group <- .resolve_ref_group(object, ref_group)
   data      <- object$data
@@ -80,11 +88,11 @@ aib_amplify <- function(object,
     # A(t) = B(t|1) - B(t|0)
     amp_by_time <- g_lag |>
       select("group", "time", "d_lag", "B_cond") |>
-      pivot_wider(names_from  = "d_lag",
-                  values_from = "B_cond",
+      pivot_wider(names_from   = "d_lag",
+                  values_from  = "B_cond",
                   names_prefix = "B_d") |>
       mutate(
-        A_index = .data$B_d1 - .data$B_d0,
+        A_index    = .data$B_d1 - .data$B_d0,
         amplifying = abs(.data$A_index) > 1e-10
       )
 
@@ -93,22 +101,28 @@ aib_amplify <- function(object,
 
   amp_index <- bind_rows(amp_list)
 
+  # ---- Apply sign convention ----------------------------------------------
+  # "mechanism": negate so negative = recovery-driven, positive = retention-driven
+  # "legacy":    keep as-is so positive = compounding against focal group
+  if (sign == "mechanism") {
+    amp_index$A_index <- -amp_index$A_index
+  }
+
   # ---- Cumulative amplification -------------------------------------------
   cumulative_amp <- amp_index |>
     group_by(.data$group) |>
     summarise(
-      A_cumulative   = sum(.data$A_index, na.rm = TRUE),
-      A_mean         = mean(.data$A_index, na.rm = TRUE),
-      A_max          = max(abs(.data$A_index), na.rm = TRUE),
-      T_amplifying   = sum(.data$amplifying, na.rm = TRUE),
-      .groups        = "drop"
+      A_cumulative = sum(.data$A_index, na.rm = TRUE),
+      A_mean       = mean(.data$A_index, na.rm = TRUE),
+      A_max        = max(abs(.data$A_index), na.rm = TRUE),
+      T_amplifying = sum(.data$amplifying, na.rm = TRUE),
+      .groups      = "drop"
     )
 
   # ---- Matrix norm amplification (if transitions computed) ----------------
   matrix_norm <- NULL
   if (!is.null(object$transitions)) {
     mats    <- object$transitions$matrices
-    times   <- unique(lagged[[time_col]])
     mat_ref <- mats[[ref_group]]
 
     matrix_norm <- lapply(groups, function(g) {
@@ -124,9 +138,9 @@ aib_amplify <- function(object,
   narratives <- lapply(groups, function(g) {
     ca  <- cumulative_amp |> filter(.data$group == g)
     rg  <- object$transitions$recovery_gap  |> filter(.data$group == g) |>
-             pull(.data$recovery_gap)
+      pull(.data$recovery_gap)
     rtn <- object$transitions$retention_gap |> filter(.data$group == g) |>
-             pull(.data$retention_gap)
+      pull(.data$retention_gap)
     if (length(rg)  == 0 || is.na(rg[1]))  rg  <- NA_real_
     if (length(rtn) == 0 || is.na(rtn[1])) rtn <- NA_real_
     rg  <- rg[1]; rtn <- rtn[1]
@@ -157,18 +171,28 @@ aib_amplify <- function(object,
     cumulative   = cumulative_amp,
     matrix_norm  = matrix_norm,
     narratives   = narratives,
-    ref_group    = ref_group
+    ref_group    = ref_group,
+    sign         = sign
   )
 
   if (verbose) {
-    cli_h2("Amplification Analysis (ref: {ref_group})")
+    cli_h2("Amplification Analysis (ref: {ref_group}, sign: {sign})")
     for (g in groups) {
       ca <- cumulative_amp |> filter(.data$group == g)
-      direction <- if (ca$A_mean < 0) "compounding against" else "compounding toward"
-      cli_li("Group {g}: A_cumulative = {round(ca$A_cumulative,3)} ({direction} group {g})")
+      direction <- if (sign == "mechanism") {
+        if (is.na(ca$A_mean) || abs(ca$A_mean) < 1e-10) {
+          "no amplification for"
+        } else if (ca$A_mean < 0) {
+          "recovery-driven amplification against"
+        } else {
+          "retention-driven amplification against"
+        }
+      } else {
+        if (ca$A_mean < 0) "compounding toward" else "compounding against"
+      }
+      cli_li("Group {g}: A_cumulative = {round(ca$A_cumulative, 3)} ({direction} group {g})")
     }
   }
 
   invisible(object)
 }
-

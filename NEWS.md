@@ -1,3 +1,16 @@
+# AIBias 0.1.1
+
+* Updated amplification index to a mechanism-oriented sign convention:
+  `A_t = (p11_ref - p11_group) - (p01_ref - p01_group)`.
+  Negative values indicate recovery-driven amplification against the focal
+  group; positive values indicate retention-driven amplification.
+* Added `sign` argument to `aib_amplify()` with options `"mechanism"`
+  (default) and `"legacy"` for backward compatibility.
+* Improved documentation to clarify sign interpretation.
+* Fixed: `\dontrun{}` replaced with `\donttest{}` in examples.
+* Fixed: added `\value` tags to `print.aibias` and `summary.aibias`.
+* Fixed: `aib_figures()` default path now uses `tempdir()`.
+
  # AIBias 0.1.0
 
 * Initial CRAN submission.

@@ -4,13 +4,25 @@
 \alias{aib_amplify}
 \title{Compute dynamic bias amplification indices}
 \usage{
-aib_amplify(object, ref_group = NULL, verbose = TRUE)
+aib_amplify(
+  object,
+  ref_group = NULL,
+  sign = c("mechanism", "legacy"),
+  verbose = TRUE
+)
 }
 \arguments{
 \item{object}{An \code{aibias} object from \code{\link[=aib_build]{aib_build()}}. Recommended to run
 \code{\link[=aib_transition]{aib_transition()}} first.}
 
 \item{ref_group}{Character. Reference group.}
+
+\item{sign}{Character; \code{"mechanism"} (default) or \code{"legacy"}.
+Under \code{"mechanism"}: negative values indicate recovery-driven
+amplification against the focal group; positive values indicate
+retention-driven amplification. Under \code{"legacy"}: positive values
+indicate compounding against the focal group. Note: prior versions used
+the \code{"legacy"} sign convention.}
 
 \item{verbose}{Logical.}
 }
